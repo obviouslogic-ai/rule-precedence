@@ -1,0 +1,13 @@
+[
+  {"name": "org", "rules": {
+    "require_review": {"type": "flag", "value": true},
+    "max_spend": {"type": "max", "value": 500},
+    "allowed_tools": {"type": "allow", "value": ["search", "read", "write"]}}},
+  {"name": "team", "rules": {
+    "max_spend": {"type": "max", "value": 100},
+    "log_actions": {"type": "flag", "value": true}}},
+  {"name": "project", "rules": {
+    "require_review": {"type": "flag", "value": false},
+    "allowed_tools": {"type": "allow", "value": ["search", "read"]},
+    "max_spend": {"type": "max", "value": 1000}}}
+]

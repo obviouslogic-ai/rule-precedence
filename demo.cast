@@ -1,0 +1,5 @@
+{"version": 2, "width": 80, "height": 24, "timestamp": 1792796482, "env": {"SHELL": null, "TERM": "dumb"}}
+[0.003476, "o", "$ python3 precedence.py example.json\r\n"]
+[0.021018, "o", "require_review   = True                     (set by org)\r\nmax_spend        = 100                      (set by team)\r\nallowed_tools    = ['search', 'read']       (set by project)\r\nlog_actions      = True                     (set by team)\r\nREJECTED project: require_review tries to weaken True (set by org) to False\r\nREJECTED project: max_spend tries to weaken 100 (set by team) to 1000\r\n"]
+[0.023649, "o", "\r\n$ python3 -m unittest\r\n"]
+[0.065823, "o", ".......\r\n----------------------------------------------------------------------\r\nRan 7 tests in 0.000s\r\n\r\nOK\r\n"]
