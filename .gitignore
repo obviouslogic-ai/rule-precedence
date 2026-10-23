@@ -1,2 +1,3 @@
+web/vendor/
 __pycache__/
-*.log
+audit.log

@@ -1,33 +1,42 @@
 # rule-precedence
 
-A small demo of layered policy for AI agents. Rules flow down from the top layer (say, organization, then team, then project). A lower layer may add new rules or make existing ones stricter. It may never loosen a rule set above it.
+Stacked rule layers (org, team, project) where a lower layer may tighten a rule but any attempt to loosen one is rejected and reported.
 
-## Rule types
+**This is a scripted demo.** It represents the governance process I use in Palladium, my own agent framework. It is not a sample or excerpt of that system, and no Palladium code or data is in it.
 
-| type  | stricter means          | example          |
-|-------|-------------------------|------------------|
-| flag  | `true` beats `false`    | `require_review` |
-| max   | a lower number          | `max_spend`      |
-| allow | a smaller set           | `allowed_tools`  |
+- Live page: https://demos.obviouslogic.ai/rule-precedence/
+- Source: https://github.com/obviouslogic-ai/rule-precedence
 
-A weakening attempt is rejected and reported, and the stricter value stays in force.
+## How it fits Palladium governance
 
-## Run it
+Palladium stacks its rules, from a top-level charter down to each agent's task. Lower layers can add rules or make them stricter, never weaker. This repo acts that out with three rule types: flags, maximums and allow-lists.
 
+## Run the CLI
+
+```sh
+python3 precedence.py example.json   # prints the effective rules and the rejected weakenings
 ```
-python3 precedence.py example.json
+
+Standard library only, no installs.
+
+## Run the page locally
+
+```sh
+cd web && ./get-pyodide.sh && cd ..   # once: downloads Pyodide 0.27.7 into web/vendor (gitignored)
+python3 -m http.server 8000   # from the folder that holds this repo
+# open http://localhost:8000/rule-precedence/web/
 ```
 
-The example's project layer tries to turn off review, and to raise the spend limit. Both are rejected. Its narrower tool list is accepted.
+The page loads `example.json`, which already holds two weakening attempts, shown struck through in red. Try the preset changes or type your own.
 
-## Test it
+The page runs this repo's real Python in the browser through Pyodide, so what you click is the same code the tests cover. Styling comes from `web/kit/`, shared across all five demos.
 
-```
+## Tests
+
+```sh
 python3 -m unittest -v
 ```
 
-Python 3.10+, standard library only.
+## License
 
-## Demo
-
-Terminal recording: `demo.cast` (play with `asciinema play demo.cast`).
+MIT

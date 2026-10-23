@@ -1,0 +1,31 @@
+/* Shared visual kit for the governance demos. Dark, mission-control, no boxes. */
+@font-face{font-family:Barlow;font-weight:400;src:url(fonts/barlow-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:Barlow;font-weight:600;src:url(fonts/barlow-latin-600-normal.woff2) format("woff2")}
+:root{--bg:#07080A;--fg:#F4F4F2;--dim:#8A8D93;--faint:#24262B;--ok:#7CE0A3;--bad:#FF6B5E;--accent:#9DB8FF;--mono:ui-monospace,"SFMono-Regular",Menlo,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,.h{font-family:Barlow,sans-serif;font-weight:600;text-transform:uppercase;letter-spacing:.14em;margin:0}
+h1{font-size:clamp(30px,5vw,58px);line-height:1.1;max-width:22ch;margin-top:28px}
+h2{font-size:15px;color:var(--dim);margin:12px 0 24px}
+.kit-head{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px 28px;align-items:baseline;padding:18px 8vw;background:linear-gradient(var(--bg) 70%,transparent)}
+.kit-head .brand{font:600 13px Barlow,sans-serif;letter-spacing:.24em;text-transform:uppercase;color:var(--fg);text-decoration:none;margin-right:auto}
+.kit-head nav a{font:11px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim);text-decoration:none;margin-right:20px}
+.kit-head nav a[aria-current=page]{color:var(--fg)}
+.kit-head .clock{font:11px var(--mono);letter-spacing:.16em;color:var(--dim)}
+.screen{min-height:86vh;padding:10vh 8vw;display:flex;flex-direction:column;justify-content:center;opacity:.25;transform:translateY(24px);transition:opacity 1.2s ease,transform 1.2s ease}
+.screen>*{width:100%}.screen.in{opacity:1;transform:none}
+.lede{max-width:56ch;color:var(--dim);font-size:19px;margin-top:28px}
+.note{max-width:60ch;color:var(--dim);font-size:14px;margin-top:20px;padding-left:16px;background:linear-gradient(var(--accent),var(--accent)) left/1px 100% no-repeat}
+.tele{font:11px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.tele b{color:var(--fg);font-weight:400}
+button,select,input{background:transparent;color:var(--fg);border:0;font:600 13px Barlow,sans-serif;letter-spacing:.18em;text-transform:uppercase;padding:10px 0;margin-right:32px;cursor:pointer}
+button:hover{color:var(--accent)}button:disabled{color:var(--faint);cursor:default}
+button[aria-pressed=false]{color:var(--dim)}
+input{text-transform:none;letter-spacing:0;font:400 20px system-ui,sans-serif;width:100%;max-width:640px;border-bottom:1px solid var(--faint);margin-bottom:16px;cursor:text}
+select{border-bottom:1px solid var(--faint);text-transform:none;letter-spacing:.02em;font:400 16px system-ui,sans-serif}
+select option{background:var(--bg)}
+.go{color:var(--accent)}.danger{color:var(--bad)}.okc{color:var(--ok)}.badc{color:var(--bad)}
+.verdict{font:600 clamp(22px,3vw,34px) Barlow,sans-serif;letter-spacing:.14em;text-transform:uppercase;display:block;margin-top:24px;transition:color .6s}
+.cols{display:grid;grid-template-columns:1fr 1.3fr;gap:8vw}@media(max-width:900px){.cols{grid-template-columns:1fr}}
+a{color:var(--fg);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--dim)}
+.kit-foot{padding:8vh 8vw}
