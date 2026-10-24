@@ -2,7 +2,7 @@ import json
 import unittest
 from pathlib import Path
 
-from precedence import Weakening, check, merge
+from precedence import Weakening, check, merge, naive
 
 
 def layer(name, **rules):
@@ -45,6 +45,14 @@ class PrecedenceTest(unittest.TestCase):
         self.assertEqual(eff["max_spend"]["value"], 100)
         self.assertTrue(eff["require_review"]["value"])
         self.assertEqual(len(bad), 2)
+
+    def test_naive_merge_lets_lower_layer_loosen(self):
+        layers = json.loads(Path("example.json").read_text())
+        loose = naive(layers)
+        self.assertEqual(loose["max_spend"]["value"], 1000)
+        self.assertFalse(loose["require_review"]["value"])
+        eff, _ = merge(layers)
+        self.assertEqual(eff["max_spend"]["value"], 100)
 
 
 if __name__ == "__main__":

@@ -45,6 +45,15 @@ def merge(layers):
     return effective, violations
 
 
+def naive(layers):
+    """Plain config merging, for contrast: the last layer to set a rule wins, looser or not."""
+    effective = {}
+    for layer in layers:
+        for name, rule in layer["rules"].items():
+            effective[name] = dict(rule, set_by=layer["name"])
+    return effective
+
+
 def check(layers):
     effective, violations = merge(layers)
     if violations:
