@@ -2,13 +2,15 @@
 export const DEMOS = [
   ["human-approval-gate", "Approval gate"], ["rule-precedence", "Rule precedence"], ["skill-registry-lint", "Skill lint"],
   ["agent-activity-viz", "Agent activity"], ["assembly-demo", "Assembly"]];
-export const NOTE = "This is a scripted demo. It represents the governance process I use in Palladium, my own agent framework. It is not a sample or excerpt of that system, and no Palladium code or data is in it.";
+export const NOTE = "This is a scripted demo that represents the process I run in my own agent framework. It is not a sample or excerpt of that system, and none of its code or data is in it.";
 const LIVE = location.hostname === "demos.obviouslogic.ai";
-export const href = n => LIVE ? `/${n}/` : `/${n}/web/`;
+// demos.obviouslogic.ai serves this folder at "/"; obviouslogic.ai serves it at "/demos/".
+const BASE = LIVE ? "/" : "/demos/";
+export const href = n => `${BASE}${n}/`;
 export function mount(current, { status = "READY" } = {}) {
   const i = DEMOS.findIndex(d => d[0] === current);
   const h = document.createElement("header"); h.className = "kit-head";
-  h.innerHTML = `<a class="brand" href="${LIVE ? "/" : "/demos-site/"}">ObviousLogic / Demos</a>
+  h.innerHTML = `<a class="brand" href="${BASE}">ObviousLogic / Demos</a>
     <nav>${DEMOS.map(([n, t], j) => `<a href="${href(n)}"${j === i ? ' aria-current="page"' : ""}><span class="n">${String(j + 1).padStart(2, "0")}</span><span class="t"> ${t}</span></a>`).join("")}</nav>
     <span class="clock" id="kit-clock"></span>`;
   document.body.prepend(h);
@@ -17,7 +19,7 @@ export function mount(current, { status = "READY" } = {}) {
   const f = document.createElement("footer"); f.className = "kit-foot tele";
   const src = i >= 0 ? `SOURCE <a href="https://github.com/obviouslogic-ai/${current}">github<span class="long">.com/obviouslogic-ai/${current}</span></a>` : "";
   if (document.body.classList.contains("stage")) {
-    f.innerHTML = `<span>SCRIPTED DEMO<span class="long"> OF PALLADIUM GOVERNANCE</span></span><span>${src}</span><button class="info-btn" id="kit-info-btn" aria-expanded="false">i  ABOUT THIS DEMO</button>`;
+    f.innerHTML = `<span>SCRIPTED DEMO<span class="long"> THAT REPRESENTS THE PROCESS</span></span><span>${src}</span><button class="info-btn" id="kit-info-btn" aria-expanded="false">i  ABOUT THIS DEMO</button>`;
     const box = document.createElement("aside"); box.className = "kit-info"; box.id = "kit-info";
     const t = document.getElementById("info");
     box.innerHTML = `<div class="tele">ABOUT</div>${t ? t.innerHTML : ""}<p class="note">${NOTE}</p>`;
@@ -48,4 +50,14 @@ export function autoFit({ watch = true } = {}) {
   const fit = () => { if (!queued) { queued = true; requestAnimationFrame(run); } };
   addEventListener("resize", fit); addEventListener("transitionend", fit); addEventListener("animationend", fit); if (watch) { new MutationObserver(fit).observe(main, { childList: true, subtree: true, characterData: true }); new MutationObserver(fit).observe(b, { attributes: true, attributeFilter: ["data-done"] }); }
   run(); return run;
+}
+
+// Illustrative cost model: labelled number inputs, recomputed on every change. Values are the visitor's to adjust.
+export const usd = n => "$" + Math.round(n).toLocaleString("en-US");
+export function calc(el, fields, onChange) {
+  el.classList.add("calc");
+  el.innerHTML = fields.map(f => `<label>${f.label}<input type="number" inputmode="decimal" min="0" step="${f.step || 1}" id="c-${f.id}" value="${f.value}"></label>`).join("");
+  const read = () => Object.fromEntries(fields.map(f => [f.id, Math.max(0, +document.getElementById("c-" + f.id).value || 0)]));
+  el.addEventListener("input", () => onChange(read()));
+  return read;
 }

@@ -1,86 +1,106 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Rule precedence · ObviousLogic demos</title><link rel="stylesheet" href="kit/kit.css">
 <style>
-.layer{padding:12px 0 12px calc(var(--depth)*6vw);transition:opacity .6s}
-.layer .rules{display:flex;flex-wrap:wrap;gap:6px 32px;margin-top:8px;font:14px var(--mono)}
-.rule.rejected{color:var(--bad);text-decoration:line-through;animation:bounce .7s ease}
-.rule.applied{color:var(--fg)}.rule.shadow{color:var(--dim)}
-@keyframes bounce{0%{transform:translateX(0)}30%{transform:translateX(18px)}60%{transform:translateX(-8px)}100%{transform:none}}
-
-.work{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:3vw}.work>div{min-height:0;overflow:hidden}
-.layer.focus .h{color:var(--accent)}.layer.dim{opacity:.4}
-.rule.prop{color:var(--accent);outline:1px dashed var(--accent);outline-offset:4px}
-#checks div{font:13px/1.8 var(--mono);opacity:0;transition:opacity .4s}#checks div.in{opacity:1}
-#effective div,#violations div{font:13px/1.8 var(--mono)}#violations div{color:var(--bad)}
-.act .choices{display:flex;gap:6px 30px;flex-wrap:wrap}.act .choices .big{font-size:14px;letter-spacing:.14em}
-
-.layer .rules{font-size:.9em}#checks div,#effective div,#violations div{font-size:.82em}
-@media (max-width:600px),(orientation:portrait){.work{grid-template-columns:1fr 1fr;grid-template-rows:auto minmax(0,1fr);gap:1.5vh 5vw}.work>div:first-child{grid-column:1/-1}.layer{padding:.35em 0 .35em calc(var(--depth)*4vw)}.layer .rules{gap:2px 14px}
- .act .choices{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;width:100%}.act .choices .big{font-size:11px;letter-spacing:.06em;text-align:left;line-height:1.3}}
-@media (max-height:520px){.layer{padding:.2em 0 .2em calc(var(--depth)*3vw)}.act .choices{gap:4px 16px}.act .choices .big{font-size:11px;letter-spacing:.06em}}
-
-@media (orientation:portrait) and (max-height:700px),(max-height:520px){#violations,#violations+*,.work>div:last-child .tele+#effective~.tele{display:none}}
-@media (max-height:520px){.work{grid-template-columns:1.2fr 1fr 1fr}.act .choices{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px}}
+.work{font-size:calc(1.3em * var(--k,1));display:grid;grid-template-columns:.9fr 1.6fr;grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"layers trail" "cost trail";gap:1.6dvh 3vw}
+.work>div{min-height:0;min-width:0;overflow:hidden}.work .tele{font-size:.62em;margin-bottom:.35em}
+#layc{grid-area:layers}#trc{grid-area:trail}#costc{grid-area:cost}
+.layer{padding:.3em 0 .3em calc(var(--depth) * 1.2em);transition:opacity .5s}
+.layer .h{font-size:.8em;letter-spacing:.12em}.layer.focus .h{color:var(--accent)}
+.layer .rules{display:flex;flex-wrap:wrap;gap:.1em 1.2em;margin-top:.15em;font:.66em var(--mono);color:var(--dim)}
+.rule.prop{color:var(--accent);outline:1px dashed var(--accent);outline-offset:3px}
+table{border-collapse:collapse;width:100%;font:.7em/1.35 var(--mono)}
+th{font-weight:400;color:var(--dim);letter-spacing:.1em;text-align:left;padding:.2em .6em .35em 0;font-size:.85em;text-transform:uppercase;white-space:nowrap}
+td{padding:.35em .6em .35em 0;vertical-align:top;border-top:1px solid var(--faint)}
+td.n{color:var(--fg);white-space:nowrap}
+.chip{display:inline-block;opacity:0;transform:translateX(-6px);transition:all .35s;margin-right:.3em;white-space:nowrap}.chip.in{opacity:1;transform:none}
+.chip .by{color:var(--dim)}.chip.tight{color:var(--ok)}.chip.loose{color:var(--bad);text-decoration:line-through}.chip.set{color:var(--fg)}
+td.nv,td.ev{white-space:nowrap;opacity:0;transition:opacity .4s}td.nv.in,td.ev.in{opacity:1}
+td.nv.diff{color:var(--bad)}td.ev{color:var(--ok)}
+#sum{font:.68em/1.5 var(--mono);color:var(--dim);margin-top:.6em;min-height:3em}#sum .x{color:var(--bad)}#sum .y{color:var(--ok)}
+.act select{margin-right:0;max-width:100%}
+@media (max-width:760px),(orientation:portrait){
+ .work{font-size:calc(1.05em * var(--k,1));grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"layers" "trail" "cost";gap:1.2dvh}
+ .layer{padding:.15em 0 .15em calc(var(--depth) * .9em)}.why{font-size:12px}}
+@media (max-height:560px){.why{display:none}.work{grid-template-columns:.8fr 1.4fr 1fr;grid-template-rows:minmax(0,1fr);grid-template-areas:"layers trail cost"}#trc{font-size:.9em}}
 </style></head><body class="stage">
 <main class="stage-main">
-<div><div class="tele" data-kit-tele></div><h1>A lower layer can tighten a rule. It can never loosen one</h1></div>
+<div><div class="tele" data-kit-tele></div><h1>A lower layer can tighten a rule. It can never loosen one</h1>
+<p class="why"><b>WHY I BUILT THIS.</b> Agent rules come from several places: company policy, a team, one project. Ordinary config merging lets the last file win, so a single project setting can quietly lift a spend cap or switch off review for every run under it. Precedence makes each layer a floor that nothing below it can lower, and every attempt is reported.</p></div>
 <div class="work" data-fit>
- <div><div class="tele">LAYERS / <b>TOP WINS</b></div><div id="layers"></div></div>
- <div><div class="tele">MERGE CHECK / <b id="phase">IDLE</b></div><div id="checks"><div class="in" style="color:var(--dim)">Propose a rule change below.</div></div></div>
- <div><div class="tele">EFFECTIVE RULES / <b>merge()</b></div><div id="effective"></div><div class="tele" style="margin-top:20px">REJECTED / <b id="vcount">0</b></div><div id="violations"></div></div>
+ <div id="layc"><div class="tele">01 / <b>LAYERS</b>, TOP TO BOTTOM</div><div id="layers"></div></div>
+ <div id="trc"><div class="tele">02 / <b>MERGE, RULE BY RULE</b> / <span id="phase">IDLE</span></div>
+  <table><thead><tr><th>Rule</th><th>Each layer's value</th><th>Last write wins</th><th>Precedence</th></tr></thead><tbody id="trail"></tbody></table><div id="sum"></div></div>
+ <div id="costc"><div class="tele">03 / <b>THE COST</b> / <span class="illus">ILLUSTRATIVE, EDIT THE NUMBERS</span></div><div id="calc"></div>
+  <div class="cost"><span class="lab">Last write wins</span><span class="bar bad"><i id="bA"></i></span><span class="v" id="vA">-</span><span class="lab">Precedence</span><span class="bar ok"><i id="bB"></i></span><span class="v" id="vB">-</span></div>
+  <div class="math" id="math">Press Merge to compute.</div></div>
 </div>
-<div class="act"><span class="tele">PROPOSE A RULE CHANGE</span><div class="choices">
-<button class="big" data-try='["team","max_spend","max",1000]'>Team raises spend cap to 1000</button>
-<button class="big" data-try='["project","allowed_tools","allow",["search"]]'>Project narrows tools to search</button>
-<button class="big" data-try='["team","require_mfa","flag",true]'>Team adds require_mfa</button>
-<button class="big" data-try='["project","allowed_tools","allow",["search","read","write","delete"]]'>Project adds delete</button></div>
-<span class="verdict" id="verdict"></span><button class="big" id="replay" hidden>Replay</button></div>
+<div class="act"><select id="sc" aria-label="Pick a change"></select><button class="big" id="go" disabled>Merge the layers</button><span class="verdict" id="verdict"></span></div>
 </main>
-<template id="info"><p>Palladium stacks its rules: a charter at the top, then department, then each agent's task. Lower layers may add or tighten, and any attempt to weaken is rejected and reported.</p><p>This page runs the real <code>precedence.py</code> on the repo's <code>example.json</code> in your browser. Each proposal starts from that file.</p></template>
+<template id="info"><p>My agents get their rules from stacked layers: a charter at the top, then a team, then each project. Lower layers may add rules or tighten them. Any attempt to loosen one is rejected and reported, and the stricter value stays.</p><p>This page runs the real <code>precedence.py</code> on the repo's <code>example.json</code> in your browser: <code>merge()</code> for precedence and <code>naive()</code>, plain last-write-wins merging, for contrast. Pick a change to try it on top of the example. The cost panel is an illustrative model: every number is an input you can change, and the gaps it prices come straight from the two merges.</p></template>
 <script src="vendor/pyodide.js"></script>
 <script type="module">
-import { mount, setStatus, sleep, autoFit } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
+import { mount, setStatus, sleep, autoFit, calc, usd } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
 mount("rule-precedence", { status: "LOADING PYTHON" });
 const $ = id => document.getElementById(id);
+const TRY = [["Example layers as written", null], ["Team raises spend cap to 1000", ["team", "max_spend", "max", 1000]],
+ ["Project narrows tools to search", ["project", "allowed_tools", "allow", ["search"]]], ["Team adds require_mfa", ["team", "require_mfa", "flag", true]],
+ ["Project adds delete to its tools", ["project", "allowed_tools", "allow", ["search", "read", "write", "delete"]]]];
+TRY.forEach(([n], i) => $("sc").add(new Option(n, i)));
+const FIELDS = [{ id: "runs", label: "Agent runs a month", value: 100 }, { id: "cap", label: "% of runs that spend to the cap", value: 10 },
+ { id: "bad", label: "% unreviewed runs that go wrong", value: 2, step: .5 }, { id: "fix", label: "Cost of one bad run ($)", value: 1000, step: 100 }];
+let last = null;
+function cost(v) {
+  if (!last) return; const { nv, ev } = last;
+  const spendGap = Math.max(0, (nv.max_spend?.value ?? 0) - (ev.max_spend?.value ?? 0)), reviewOff = ev.require_review?.value && !nv.require_review?.value;
+  const extra = (nv.allowed_tools?.value || []).filter(t => !(ev.allowed_tools?.value || []).includes(t));
+  const spend = v.runs * v.cap / 100 * spendGap, rev = reviewOff ? v.runs * v.bad / 100 * v.fix : 0, A = spend + rev, B = 0, m = Math.max(A, 1);
+  $("bA").style.width = (A / m * 100) + "%"; $("bB").style.width = "0%"; $("vA").textContent = usd(A) + "/mo"; $("vB").textContent = usd(B) + "/mo";
+  $("math").innerHTML = `Overspend: <b>${v.runs}</b> runs x <b>${v.cap}%</b> x <b>${usd(spendGap)}</b> cap gap = <b>${usd(spend)}</b>. ` +
+    (reviewOff ? `Review switched off: <b>${v.runs}</b> x <b>${v.bad}%</b> x <b>${usd(v.fix)}</b> = <b>${usd(rev)}</b>. ` : "Review stays on. ") +
+    (extra.length ? `Extra tools granted: <b>${extra.join(", ")}</b> (not priced). ` : "") + `Precedence: <b>$0</b> above policy, <b>${last.viol.length}</b> attempt(s) reported.`;
+  document.body.dataset.exposure = Math.round(A);
+}
+const read = calc($("calc"), FIELDS, cost);
 const py = await loadPy({ "precedence.py": "../precedence.py" });
 const base = await (await fetch("../example.json")).json();
-let layers = structuredClone(base);
 py.runPython("import json, precedence");
-const merge = ls => JSON.parse(py.runPython(`json.dumps(precedence.merge(json.loads(${JSON.stringify(JSON.stringify(ls))})))`));
-function render(prop) {
-  const [eff, viol] = merge(layers);
-  $("layers").innerHTML = layers.map((l, i) => `<div class="layer" data-l="${l.name}" style="--depth:${i}"><div class="h">${String(i + 1).padStart(2, "0")} ${l.name}</div><div class="rules">${Object.entries(l.rules).map(([n, r]) => {
-    const bad = viol.some(v => v.startsWith(l.name + ": " + n + " ")), live = eff[n] && eff[n].set_by === l.name, isP = prop && prop[0] === l.name && prop[1] === n;
-    return `<span class="rule ${isP && !prop.done ? "prop" : bad ? "rejected" : live ? "applied" : "shadow"}">${n} = ${JSON.stringify(r.value)}</span>`; }).join("")}</div></div>`).join("");
-  $("effective").innerHTML = Object.entries(eff).map(([n, r]) => `<div>${n.padEnd(15)} ${JSON.stringify(r.value)} <span style="color:var(--dim)">by ${r.set_by}</span></div>`).join("");
-  $("violations").innerHTML = viol.map(v => `<div>${v}</div>`).join(""); $("vcount").textContent = viol.length; return viol;
+const P = (fn, arg) => JSON.parse(py.runPython(`json.dumps(precedence.${fn}(*json.loads(${JSON.stringify(JSON.stringify(arg))})))`));
+const fmt = v => Array.isArray(v) ? "[" + v.join(",") + "]" : String(v);
+function drawLayers(layers, prop, focus) {
+  $("layers").innerHTML = layers.map((l, i) => `<div class="layer${focus === l.name ? " focus" : ""}" style="--depth:${i}"><div class="h">${String(i + 1).padStart(2, "0")} ${l.name}${i === 0 ? " (charter)" : ""}</div><div class="rules">${Object.entries(l.rules).map(([n, r]) =>
+    `<span class="rule${prop && prop[0] === l.name && prop[1] === n ? " prop" : ""}">${n}=${fmt(r.value)}</span>`).join("")}</div></div>`).join("");
 }
-const line = async (t, c = "") => { const d = document.createElement("div"); d.innerHTML = t; d.style.color = c; $("checks").append(d); await sleep(60); d.classList.add("in"); await sleep(700); };
 let busy = false;
-let lastT = null;
-async function attempt(t) {
-  lastT = t; $("replay").hidden = true;
-  if (busy) return; busy = true; delete document.body.dataset.done; document.querySelectorAll("[data-try]").forEach(b => b.disabled = true);
-  layers = structuredClone(base); render(); $("checks").innerHTML = ""; $("verdict").textContent = ""; setStatus("CHECKING"); $("phase").textContent = "PROPOSED";
-  await line(`PROPOSAL ${t[0]}: ${t[1]} = ${JSON.stringify(t[3])}`, "var(--accent)");
-  layers.find(l => l.name === t[0]).rules[t[1]] = { type: t[2], value: t[3] }; render(t); await sleep(500);
-  const idx = layers.findIndex(l => l.name === t[0]); let checked = 0;
-  for (const l of layers.slice(0, idx)) {
-    $("phase").textContent = "CHECKING " + l.name.toUpperCase();
-    document.querySelectorAll(".layer").forEach(e => e.classList.toggle("focus", e.dataset.l === l.name));
-    const r = l.rules[t[1]];
-    await line(r ? `vs ${l.name}: ${t[1]} = ${JSON.stringify(r.value)} (${r.type})` : `vs ${l.name}: no ${t[1]} rule`, "var(--dim)"); checked++;
+async function run() {
+  if (busy) return; busy = true; delete document.body.dataset.done; $("go").disabled = $("sc").disabled = true; $("verdict").textContent = ""; $("sum").innerHTML = "";
+  const t = TRY[+$("sc").value][1], layers = structuredClone(base);
+  if (t) layers.find(l => l.name === t[0]).rules[t[1]] = { type: t[2], value: t[3] };
+  drawLayers(layers, t); setStatus("MERGING"); $("phase").textContent = "WALKING THE LAYERS";
+  const names = [...new Set(layers.flatMap(l => Object.keys(l.rules)))];
+  $("trail").innerHTML = names.map(n => `<tr data-n="${n}"><td class="n">${n}</td><td class="tr"></td><td class="nv"></td><td class="ev"></td></tr>`).join("");
+  const enf = {};
+  for (const n of names) {
+    const row = $("trail").querySelector(`[data-n="${n}"]`);
+    for (const l of layers) {
+      const r = l.rules[n]; if (!r) continue; drawLayers(layers, t, l.name);
+      let cls = "set", mark = "";
+      if (enf[n] !== undefined) { const okk = py.runPython(`precedence.stricter_or_equal(${JSON.stringify(r.type)}, json.loads(${JSON.stringify(JSON.stringify(r.value))}), json.loads(${JSON.stringify(JSON.stringify(enf[n]))}))`); cls = okk ? "tight" : "loose"; mark = okk ? " ok" : " looser"; }
+      if (cls !== "loose") enf[n] = r.value;
+      row.querySelector(".tr").insertAdjacentHTML("beforeend", `<span class="chip ${cls}">${fmt(r.value)}<span class="by"> ${l.name}${mark}</span></span>`);
+      await sleep(40); row.querySelector(".chip:last-child").classList.add("in"); await sleep(420);
+    }
   }
-  if (!checked) await line("top layer, nothing above it", "var(--dim)");
-  document.querySelectorAll(".layer").forEach(e => e.classList.remove("focus"));
-  t.done = true; const bad = render(t).some(v => v.startsWith(t[0] + ": " + t[1] + " "));
-  $("phase").textContent = bad ? "REJECTED" : "APPLIED";
-  await line(bad ? "WEAKER THAN A LAYER ABOVE: REJECTED" : "SAME OR STRICTER: APPLIED", bad ? "var(--bad)" : "var(--ok)");
-  $("verdict").textContent = bad ? `Rejected: ${t[0]} cannot weaken ${t[1]}` : `Applied: ${t[0]} ${t[1]} = ${JSON.stringify(t[3])}`;
+  drawLayers(layers, t); $("phase").textContent = "RESULT";
+  const nv = P("naive", [layers]), [ev, viol] = P("merge", [layers]);
+  for (const n of names) { const row = $("trail").querySelector(`[data-n="${n}"]`), a = row.querySelector(".nv"), b = row.querySelector(".ev");
+    a.textContent = fmt(nv[n].value); b.textContent = fmt(ev[n].value); a.classList.toggle("diff", fmt(nv[n].value) !== fmt(ev[n].value)); a.classList.add("in"); await sleep(250); b.classList.add("in"); await sleep(250); }
+  last = { nv, ev, viol }; cost(read());
+  const diffs = names.filter(n => fmt(nv[n].value) !== fmt(ev[n].value));
+  $("sum").innerHTML = viol.length ? viol.map(v => `<span class="x">REJECTED ${v}</span>`).join("<br>") + `<br><span class="y">${diffs.length} rule(s) would have been loosened silently by last write wins.</span>` : `<span class="y">Nothing loosened. Both merges agree.</span>`;
+  const bad = t ? viol.some(v => v.startsWith(t[0] + ": " + t[1] + " ")) : viol.length > 0;
+  $("verdict").textContent = t ? (bad ? `Rejected: ${t[0]} cannot loosen ${t[1]}` : `Applied: ${t[0]} ${t[1]} = ${fmt(t[3])}`) : `${viol.length} loosening attempts blocked`;
   $("verdict").className = "verdict " + (bad ? "badc" : "okc"); document.body.dataset.verdict = bad ? "rejected" : "applied";
-  setStatus("DONE"); document.querySelectorAll("[data-try]").forEach(b => b.disabled = false); busy = false; $("replay").hidden = false; document.body.dataset.done = "1";
+  setStatus("DONE"); $("phase").textContent = "DONE"; $("go").textContent = "Merge again"; $("go").disabled = $("sc").disabled = false; busy = false; document.body.dataset.done = "1";
 }
-document.querySelectorAll("[data-try]").forEach(b => b.onclick = () => attempt(JSON.parse(b.dataset.try)));
-$("replay").onclick = () => attempt(JSON.parse(JSON.stringify(lastT.slice(0, 4))));
-setStatus("READY"); render(); autoFit(); document.body.dataset.ready = "1";
+$("go").onclick = run; drawLayers(base); $("go").disabled = false; setStatus("READY"); autoFit(); document.body.dataset.ready = "1";
 </script></body></html>
