@@ -1,55 +1,78 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Rule precedence · ObviousLogic demos</title><link rel="stylesheet" href="kit/kit.css">
 <style>
-.layer{padding:22px 0 22px calc(var(--depth)*6vw);transition:opacity .6s}
+.layer{padding:12px 0 12px calc(var(--depth)*6vw);transition:opacity .6s}
 .layer .rules{display:flex;flex-wrap:wrap;gap:6px 32px;margin-top:8px;font:14px var(--mono)}
 .rule.rejected{color:var(--bad);text-decoration:line-through;animation:bounce .7s ease}
 .rule.applied{color:var(--fg)}.rule.shadow{color:var(--dim)}
 @keyframes bounce{0%{transform:translateX(0)}30%{transform:translateX(18px)}60%{transform:translateX(-8px)}100%{transform:none}}
-#effective div,#violations div{font:14px/1.9 var(--mono)}#violations div{color:var(--bad)}
-.try{display:flex;flex-wrap:wrap;gap:0 24px;align-items:end}.try input{max-width:180px;font-size:16px}
-</style></head><body>
-<section class="screen in"><div class="tele" data-kit-tele></div>
-<h1>A lower layer can tighten a rule. It can never loosen one.</h1>
-<p class="lede">Palladium stacks its rules: a charter at the top, then department, then each agent's task. Lower layers may add or tighten, and any attempt to weaken is rejected and reported. This page runs the real <code>precedence.py</code> on the repo's <code>example.json</code>.</p>
-<p data-kit-note></p></section>
-<section class="screen"><div class="cols"><div><div class="tele">LAYERS / <b>TOP WINS</b></div><div id="layers"></div></div>
-<div><div class="tele">EFFECTIVE RULES / <b>merge()</b></div><div id="effective"></div>
-<div class="tele" style="margin-top:32px">REJECTED / <b id="vcount">0</b></div><div id="violations"></div></div></div></section>
-<section class="screen"><div class="tele">TRY IT / <b>PROPOSE A CHANGE</b></div><h2>Pick a layer and a rule</h2>
-<div><button data-try='["team","max_spend","max",1000]' class="danger">Team raises spend cap to 1000</button>
-<button data-try='["project","allowed_tools","allow",["search"]]' class="go">Project narrows tools to search</button>
-<button data-try='["team","require_mfa","flag",true]' class="go">Team adds require_mfa</button>
-<button data-try='["project","allowed_tools","allow",["search","read","write","delete"]]' class="danger">Project adds delete</button></div>
-<div class="try"><label class="tele">LAYER<br><select id="tl"><option>org</option><option>team</option><option selected>project</option></select></label>
-<label class="tele">RULE<br><input id="tn" value="max_spend"></label>
-<label class="tele">TYPE<br><select id="tt"><option>max</option><option>flag</option><option>allow</option></select></label>
-<label class="tele">VALUE (JSON)<br><input id="tv" value="50"></label><button id="custom">Apply</button><button id="reset">Reset</button></div>
-<p class="verdict" id="verdict"></p></section>
+
+.work{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:3vw}.work>div{min-height:0;overflow:hidden}
+.layer.focus .h{color:var(--accent)}.layer.dim{opacity:.4}
+.rule.prop{color:var(--accent);outline:1px dashed var(--accent);outline-offset:4px}
+#checks div{font:13px/1.8 var(--mono);opacity:0;transition:opacity .4s}#checks div.in{opacity:1}
+#effective div,#violations div{font:13px/1.8 var(--mono)}#violations div{color:var(--bad)}
+.act .choices{display:flex;gap:6px 30px;flex-wrap:wrap}.act .choices .big{font-size:14px;letter-spacing:.14em}
+</style></head><body class="stage">
+<main class="stage-main">
+<div><div class="tele" data-kit-tele></div><h1>A lower layer can tighten a rule. It can never loosen one</h1></div>
+<div class="work">
+ <div><div class="tele">LAYERS / <b>TOP WINS</b></div><div id="layers"></div></div>
+ <div><div class="tele">MERGE CHECK / <b id="phase">IDLE</b></div><div id="checks"><div class="in" style="color:var(--dim)">Propose a rule change below.</div></div></div>
+ <div><div class="tele">EFFECTIVE RULES / <b>merge()</b></div><div id="effective"></div><div class="tele" style="margin-top:20px">REJECTED / <b id="vcount">0</b></div><div id="violations"></div></div>
+</div>
+<div class="act"><span class="tele">PROPOSE A RULE CHANGE</span><div class="choices">
+<button class="big" data-try='["team","max_spend","max",1000]'>Team raises spend cap to 1000</button>
+<button class="big" data-try='["project","allowed_tools","allow",["search"]]'>Project narrows tools to search</button>
+<button class="big" data-try='["team","require_mfa","flag",true]'>Team adds require_mfa</button>
+<button class="big" data-try='["project","allowed_tools","allow",["search","read","write","delete"]]'>Project adds delete</button></div>
+<span class="verdict" id="verdict"></span><button class="big" id="replay" hidden>Replay</button></div>
+</main>
+<template id="info"><p>Palladium stacks its rules: a charter at the top, then department, then each agent's task. Lower layers may add or tighten, and any attempt to weaken is rejected and reported.</p><p>This page runs the real <code>precedence.py</code> on the repo's <code>example.json</code> in your browser. Each proposal starts from that file.</p></template>
 <script src="vendor/pyodide.js"></script>
 <script type="module">
-import { mount, setStatus } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
+import { mount, setStatus, sleep } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
 mount("rule-precedence", { status: "LOADING PYTHON" });
 const $ = id => document.getElementById(id);
 const py = await loadPy({ "precedence.py": "../precedence.py" });
 const base = await (await fetch("../example.json")).json();
-let layers = structuredClone(base), last = null;
+let layers = structuredClone(base);
 py.runPython("import json, precedence");
 const merge = ls => JSON.parse(py.runPython(`json.dumps(precedence.merge(json.loads(${JSON.stringify(JSON.stringify(ls))})))`));
-function render() {
+function render(prop) {
   const [eff, viol] = merge(layers);
-  $("layers").innerHTML = layers.map((l, i) => `<div class="layer" style="--depth:${i}"><div class="h">${String(i + 1).padStart(2, "0")} ${l.name}</div><div class="rules">${Object.entries(l.rules).map(([n, r]) => {
-    const bad = viol.some(v => v.startsWith(l.name + ": " + n + " ")), live = eff[n] && eff[n].set_by === l.name;
-    return `<span class="rule ${bad ? "rejected" : live ? "applied" : "shadow"}" data-rule="${l.name}.${n}">${n} = ${JSON.stringify(r.value)}</span>`; }).join("")}</div></div>`).join("");
-  $("effective").innerHTML = Object.entries(eff).map(([n, r]) => `<div>${n.padEnd(15)} ${JSON.stringify(r.value)} <span style="color:var(--dim)">set by ${r.set_by}</span></div>`).join("");
-  $("violations").innerHTML = viol.map(v => `<div>REJECTED ${v}</div>`).join(""); $("vcount").textContent = viol.length;
-  if (last) { const bad = viol.some(v => v.startsWith(last[0] + ": " + last[1] + " "));
-    $("verdict").textContent = bad ? `Rejected: ${last[0]} cannot weaken ${last[1]}` : `Applied: ${last[0]} ${last[1]} = ${JSON.stringify(last[3])}`;
-    $("verdict").className = "verdict " + (bad ? "badc" : "okc"); document.body.dataset.verdict = bad ? "rejected" : "applied"; }
+  $("layers").innerHTML = layers.map((l, i) => `<div class="layer" data-l="${l.name}" style="--depth:${i}"><div class="h">${String(i + 1).padStart(2, "0")} ${l.name}</div><div class="rules">${Object.entries(l.rules).map(([n, r]) => {
+    const bad = viol.some(v => v.startsWith(l.name + ": " + n + " ")), live = eff[n] && eff[n].set_by === l.name, isP = prop && prop[0] === l.name && prop[1] === n;
+    return `<span class="rule ${isP && !prop.done ? "prop" : bad ? "rejected" : live ? "applied" : "shadow"}">${n} = ${JSON.stringify(r.value)}</span>`; }).join("")}</div></div>`).join("");
+  $("effective").innerHTML = Object.entries(eff).map(([n, r]) => `<div>${n.padEnd(15)} ${JSON.stringify(r.value)} <span style="color:var(--dim)">by ${r.set_by}</span></div>`).join("");
+  $("violations").innerHTML = viol.map(v => `<div>${v}</div>`).join(""); $("vcount").textContent = viol.length; return viol;
 }
-function attempt(t) { last = t; layers.find(l => l.name === t[0]).rules[t[1]] = { type: t[2], value: t[3] }; render(); }
+const line = async (t, c = "") => { const d = document.createElement("div"); d.innerHTML = t; d.style.color = c; $("checks").append(d); await sleep(60); d.classList.add("in"); await sleep(700); };
+let busy = false;
+let lastT = null;
+async function attempt(t) {
+  lastT = t; $("replay").hidden = true;
+  if (busy) return; busy = true; delete document.body.dataset.done; document.querySelectorAll("[data-try]").forEach(b => b.disabled = true);
+  layers = structuredClone(base); render(); $("checks").innerHTML = ""; $("verdict").textContent = ""; setStatus("CHECKING"); $("phase").textContent = "PROPOSED";
+  await line(`PROPOSAL ${t[0]}: ${t[1]} = ${JSON.stringify(t[3])}`, "var(--accent)");
+  layers.find(l => l.name === t[0]).rules[t[1]] = { type: t[2], value: t[3] }; render(t); await sleep(500);
+  const idx = layers.findIndex(l => l.name === t[0]); let checked = 0;
+  for (const l of layers.slice(0, idx)) {
+    $("phase").textContent = "CHECKING " + l.name.toUpperCase();
+    document.querySelectorAll(".layer").forEach(e => e.classList.toggle("focus", e.dataset.l === l.name));
+    const r = l.rules[t[1]];
+    await line(r ? `vs ${l.name}: ${t[1]} = ${JSON.stringify(r.value)} (${r.type})` : `vs ${l.name}: no ${t[1]} rule`, "var(--dim)"); checked++;
+  }
+  if (!checked) await line("top layer, nothing above it", "var(--dim)");
+  document.querySelectorAll(".layer").forEach(e => e.classList.remove("focus"));
+  t.done = true; const bad = render(t).some(v => v.startsWith(t[0] + ": " + t[1] + " "));
+  $("phase").textContent = bad ? "REJECTED" : "APPLIED";
+  await line(bad ? "WEAKER THAN A LAYER ABOVE: REJECTED" : "SAME OR STRICTER: APPLIED", bad ? "var(--bad)" : "var(--ok)");
+  $("verdict").textContent = bad ? `Rejected: ${t[0]} cannot weaken ${t[1]}` : `Applied: ${t[0]} ${t[1]} = ${JSON.stringify(t[3])}`;
+  $("verdict").className = "verdict " + (bad ? "badc" : "okc"); document.body.dataset.verdict = bad ? "rejected" : "applied";
+  setStatus("DONE"); document.querySelectorAll("[data-try]").forEach(b => b.disabled = false); busy = false; $("replay").hidden = false; document.body.dataset.done = "1";
+}
 document.querySelectorAll("[data-try]").forEach(b => b.onclick = () => attempt(JSON.parse(b.dataset.try)));
-$("custom").onclick = () => { try { attempt([$("tl").value, $("tn").value.trim(), $("tt").value, JSON.parse($("tv").value)]); } catch { $("verdict").textContent = "Value must be JSON"; } };
-$("reset").onclick = () => { layers = structuredClone(base); last = null; $("verdict").textContent = ""; render(); };
+$("replay").onclick = () => attempt(JSON.parse(JSON.stringify(lastT.slice(0, 4))));
 setStatus("READY"); render(); document.body.dataset.ready = "1";
 </script></body></html>

@@ -29,3 +29,19 @@ select option{background:var(--bg)}
 .cols{display:grid;grid-template-columns:1fr 1.3fr;gap:8vw}@media(max-width:900px){.cols{grid-template-columns:1fr}}
 a{color:var(--fg);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--dim)}
 .kit-foot{padding:8vh 8vw}
+/* One-viewport stage layout: no scrolling, one interaction, animated work, outcome and replay. */
+html:has(body.stage){scroll-behavior:auto}
+body.stage{height:100vh;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto}
+body.stage .kit-head{position:relative;padding:12px 4vw;background:none}
+.stage-main{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:10px;padding:0 4vw;min-height:0}
+.stage-main h1{font-size:clamp(20px,2.4vw,30px);margin-top:6px;max-width:none}
+.work{min-height:0;position:relative}
+.act{display:flex;align-items:center;gap:8px 36px;flex-wrap:wrap;min-height:64px}
+.big{font:600 18px Barlow,sans-serif;letter-spacing:.22em;color:var(--accent);padding:14px 0;margin:0;background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 1px no-repeat}
+.big::after{content:"  \2192"}.big:hover{color:var(--fg)}
+.act .verdict{margin:0;font-size:clamp(16px,1.8vw,22px)}
+body.stage .kit-foot{padding:8px 4vw 12px;display:flex;gap:24px;align-items:center;white-space:nowrap;overflow:hidden}
+.kit-foot .info-btn{font:11px var(--mono);letter-spacing:.16em;color:var(--accent);padding:0;margin:0 0 0 auto}
+.kit-info{position:fixed;right:4vw;bottom:44px;width:min(420px,90vw);max-height:70vh;overflow:auto;background:#0d0f13f2;padding:20px 22px;z-index:20;font-size:14px;color:var(--dim);display:none}
+.kit-info.open{display:block}.kit-info p{margin:0 0 10px}.kit-info .tele{margin-bottom:8px}
+.pulse{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.35}}

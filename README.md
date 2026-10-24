@@ -27,7 +27,7 @@ python3 -m http.server 8000   # from the folder that holds this repo
 # open http://localhost:8000/rule-precedence/web/
 ```
 
-The page loads `example.json`, which already holds two weakening attempts, shown struck through in red. Try the preset changes or type your own.
+The page fits one screen. Pick one proposed rule change at the bottom. The page checks it against every layer above it, then lights it applied or rejected and updates the effective rules. Press **Replay** or pick another. The explanation sits behind **About this demo** in the corner. Add `?fast=1` to skip the pauses.
 
 The page runs this repo's real Python in the browser through Pyodide, so what you click is the same code the tests cover. Styling comes from `web/kit/`, shared across all five demos.
 
