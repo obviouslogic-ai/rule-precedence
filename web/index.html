@@ -13,10 +13,18 @@
 #checks div{font:13px/1.8 var(--mono);opacity:0;transition:opacity .4s}#checks div.in{opacity:1}
 #effective div,#violations div{font:13px/1.8 var(--mono)}#violations div{color:var(--bad)}
 .act .choices{display:flex;gap:6px 30px;flex-wrap:wrap}.act .choices .big{font-size:14px;letter-spacing:.14em}
+
+.layer .rules{font-size:.9em}#checks div,#effective div,#violations div{font-size:.82em}
+@media (max-width:600px),(orientation:portrait){.work{grid-template-columns:1fr 1fr;grid-template-rows:auto minmax(0,1fr);gap:1.5vh 5vw}.work>div:first-child{grid-column:1/-1}.layer{padding:.35em 0 .35em calc(var(--depth)*4vw)}.layer .rules{gap:2px 14px}
+ .act .choices{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;width:100%}.act .choices .big{font-size:11px;letter-spacing:.06em;text-align:left;line-height:1.3}}
+@media (max-height:520px){.layer{padding:.2em 0 .2em calc(var(--depth)*3vw)}.act .choices{gap:4px 16px}.act .choices .big{font-size:11px;letter-spacing:.06em}}
+
+@media (orientation:portrait) and (max-height:700px),(max-height:520px){#violations,#violations+*,.work>div:last-child .tele+#effective~.tele{display:none}}
+@media (max-height:520px){.work{grid-template-columns:1.2fr 1fr 1fr}.act .choices{display:grid;grid-template-columns:1fr 1fr;gap:3px 14px}}
 </style></head><body class="stage">
 <main class="stage-main">
 <div><div class="tele" data-kit-tele></div><h1>A lower layer can tighten a rule. It can never loosen one</h1></div>
-<div class="work">
+<div class="work" data-fit>
  <div><div class="tele">LAYERS / <b>TOP WINS</b></div><div id="layers"></div></div>
  <div><div class="tele">MERGE CHECK / <b id="phase">IDLE</b></div><div id="checks"><div class="in" style="color:var(--dim)">Propose a rule change below.</div></div></div>
  <div><div class="tele">EFFECTIVE RULES / <b>merge()</b></div><div id="effective"></div><div class="tele" style="margin-top:20px">REJECTED / <b id="vcount">0</b></div><div id="violations"></div></div>
@@ -31,7 +39,7 @@
 <template id="info"><p>Palladium stacks its rules: a charter at the top, then department, then each agent's task. Lower layers may add or tighten, and any attempt to weaken is rejected and reported.</p><p>This page runs the real <code>precedence.py</code> on the repo's <code>example.json</code> in your browser. Each proposal starts from that file.</p></template>
 <script src="vendor/pyodide.js"></script>
 <script type="module">
-import { mount, setStatus, sleep } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
+import { mount, setStatus, sleep, autoFit } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
 mount("rule-precedence", { status: "LOADING PYTHON" });
 const $ = id => document.getElementById(id);
 const py = await loadPy({ "precedence.py": "../precedence.py" });
@@ -74,5 +82,5 @@ async function attempt(t) {
 }
 document.querySelectorAll("[data-try]").forEach(b => b.onclick = () => attempt(JSON.parse(b.dataset.try)));
 $("replay").onclick = () => attempt(JSON.parse(JSON.stringify(lastT.slice(0, 4))));
-setStatus("READY"); render(); document.body.dataset.ready = "1";
+setStatus("READY"); render(); autoFit(); document.body.dataset.ready = "1";
 </script></body></html>

@@ -29,19 +29,26 @@ select option{background:var(--bg)}
 .cols{display:grid;grid-template-columns:1fr 1.3fr;gap:8vw}@media(max-width:900px){.cols{grid-template-columns:1fr}}
 a{color:var(--fg);text-decoration:underline;text-underline-offset:4px;text-decoration-color:var(--dim)}
 .kit-foot{padding:8vh 8vw}
-/* One-viewport stage layout: no scrolling, one interaction, animated work, outcome and replay. */
+/* One-viewport stage layout: no scrolling, one interaction, animated work, outcome and replay.
+   Fluid from 360px phones to 1920px desktops: sizes use clamp() against vw and dvh. */
 html:has(body.stage){scroll-behavior:auto}
-body.stage{height:100vh;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto}
-body.stage .kit-head{position:relative;padding:12px 4vw;background:none}
-.stage-main{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:10px;padding:0 4vw;min-height:0}
-.stage-main h1{font-size:clamp(20px,2.4vw,30px);margin-top:6px;max-width:none}
-.work{min-height:0;position:relative}
-.act{display:flex;align-items:center;gap:8px 36px;flex-wrap:wrap;min-height:64px}
-.big{font:600 18px Barlow,sans-serif;letter-spacing:.22em;color:var(--accent);padding:14px 0;margin:0;background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 1px no-repeat}
+body.stage{--pad:clamp(14px,4vw,72px);--gap:clamp(6px,1.4dvh,14px);height:100vh;height:100dvh;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr) auto;font-size:clamp(13px,.55vw + .9dvh,17px)}
+body.stage .kit-head{position:relative;padding:clamp(8px,1.6dvh,14px) var(--pad) 4px;background:none;gap:4px 18px;align-items:center}
+body.stage .kit-head nav{display:flex;flex-wrap:wrap;gap:2px 16px}
+body.stage .kit-head nav a{margin:0;white-space:nowrap}
+.stage-main{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:var(--gap);padding:0 var(--pad);min-height:0;min-width:0}
+.stage-main h1{font-size:clamp(17px,min(2.3vw,3.4dvh),34px);margin-top:4px;max-width:none;letter-spacing:clamp(.06em,.4vw,.14em)}
+.work{min-height:0;min-width:0;position:relative;font-size:calc(1em * var(--k,1))}
+.act{display:flex;align-items:center;gap:6px 32px;flex-wrap:wrap;min-height:0}
+.big{font:600 clamp(14px,1vw + .6dvh,18px) Barlow,sans-serif;letter-spacing:.2em;color:var(--accent);padding:clamp(8px,1.4dvh,14px) 0;margin:0;background:linear-gradient(var(--accent),var(--accent)) left bottom/100% 1px no-repeat}
 .big::after{content:"  \2192"}.big:hover{color:var(--fg)}
-.act .verdict{margin:0;font-size:clamp(16px,1.8vw,22px)}
-body.stage .kit-foot{padding:8px 4vw 12px;display:flex;gap:24px;align-items:center;white-space:nowrap;overflow:hidden}
+.act .verdict{margin:0;font-size:clamp(14px,1.2vw + .5dvh,22px);letter-spacing:.1em}
+body.stage .kit-foot{padding:6px var(--pad) clamp(8px,1.4dvh,12px);display:flex;flex-wrap:wrap;gap:2px 20px;align-items:center;font-size:10px}
 .kit-foot .info-btn{font:11px var(--mono);letter-spacing:.16em;color:var(--accent);padding:0;margin:0 0 0 auto}
-.kit-info{position:fixed;right:4vw;bottom:44px;width:min(420px,90vw);max-height:70vh;overflow:auto;background:#0d0f13f2;padding:20px 22px;z-index:20;font-size:14px;color:var(--dim);display:none}
+.kit-info{position:fixed;right:var(--pad,4vw);bottom:44px;width:min(420px,calc(100vw - 28px));max-height:70dvh;overflow:auto;background:#0d0f13f2;padding:20px 22px;z-index:20;font-size:14px;color:var(--dim);display:none}
 .kit-info.open{display:block}.kit-info p{margin:0 0 10px}.kit-info .tele{margin-bottom:8px}
 .pulse{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.35}}
+/* Compact demo menu: numbers only, with the current demo named, below 1100px. */
+@media (max-width:1100px){body.stage .kit-head nav .t{display:none}body.stage .kit-head nav a[aria-current=page] .t{display:inline}body.stage .kit-head nav{gap:2px 12px}}
+@media (max-width:600px){body.stage .kit-head .clock,.kit-foot .long{display:none}body.stage .kit-head .brand{font-size:11px;letter-spacing:.18em}}
+@media (max-height:520px){body.stage .kit-head .clock,.kit-foot .long{display:none}.stage-main [data-kit-tele]{display:none}}
