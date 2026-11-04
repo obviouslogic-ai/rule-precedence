@@ -11,11 +11,11 @@ export function mount(current, { status = "READY" } = {}) {
   const i = DEMOS.findIndex(d => d[0] === current);
   const h = document.createElement("header"); h.className = "kit-head";
   h.innerHTML = `<a class="brand" href="${BASE}">ObviousLogic / Demos</a>
-    <nav>${DEMOS.map(([n, t], j) => `<a href="${href(n)}"${j === i ? ' aria-current="page"' : ""}><span class="n">${String(j + 1).padStart(2, "0")}</span><span class="t"> ${t}</span></a>`).join("")}</nav>
+    <nav>${DEMOS.map(([n, t]) => `<a href="${href(n)}"${n === current ? ' aria-current="page"' : ""}><span class="t">${t}</span></a>`).join("")}</nav>
     <span class="clock" id="kit-clock"></span>`;
   document.body.prepend(h);
   document.querySelectorAll("[data-kit-note]").forEach(n => { n.classList.add("note"); n.textContent = NOTE; });
-  document.querySelectorAll("[data-kit-tele]").forEach(n => n.innerHTML = `DEMO ${String(i + 1).padStart(2, "0")} / <b>${(DEMOS[i] || ["", ""])[1].toUpperCase()}</b> &nbsp; STATUS <b id="kit-status">${status}</b>`);
+  document.querySelectorAll("[data-kit-tele]").forEach(n => n.innerHTML = `DEMO / <b>${(DEMOS[i] || ["", ""])[1].toUpperCase()}</b> &nbsp; STATUS <b id="kit-status">${status}</b>`);
   const f = document.createElement("footer"); f.className = "kit-foot tele";
   const src = i >= 0 ? `SOURCE <a href="https://github.com/obviouslogic-ai/${current}">github<span class="long">.com/obviouslogic-ai/${current}</span></a>` : "";
   if (document.body.classList.contains("stage")) {

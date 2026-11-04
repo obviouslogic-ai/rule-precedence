@@ -48,8 +48,7 @@ body.stage .kit-foot{padding:6px var(--pad) clamp(8px,1.4dvh,12px);display:flex;
 .kit-info{position:fixed;right:var(--pad,4vw);bottom:44px;width:min(420px,calc(100vw - 28px));max-height:70dvh;overflow:auto;background:#0d0f13f2;padding:20px 22px;z-index:20;font-size:14px;color:var(--dim);display:none}
 .kit-info.open{display:block}.kit-info p{margin:0 0 10px}.kit-info .tele{margin-bottom:8px}
 .pulse{animation:pulse 1.2s ease-in-out infinite}@keyframes pulse{50%{opacity:.35}}
-/* Compact demo menu: numbers only, with the current demo named, below 1100px. */
-@media (max-width:1100px){body.stage .kit-head nav .t{display:none}body.stage .kit-head nav a[aria-current=page] .t{display:inline}body.stage .kit-head nav{gap:2px 12px}}
+@media (max-width:1100px){body.stage .kit-head nav{gap:2px 12px}}
 @media (max-width:600px){body.stage .kit-head .clock,.kit-foot .long{display:none}body.stage .kit-head .brand{font-size:11px;letter-spacing:.18em}}
 @media (max-height:520px){body.stage .kit-head .clock,.kit-foot .long{display:none}.stage-main [data-kit-tele]{display:none}}
 
