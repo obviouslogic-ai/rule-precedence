@@ -1,48 +1,50 @@
-# rule-precedence
+# Rule precedence
 
-Stacked rule layers (org, team, project) where a lower layer may tighten a rule but any attempt to loosen one is rejected and reported.
+A lower layer can add or tighten a rule and can never weaken one.
+
+When a higher layer overrides a lower one, the override is recorded.
+
+A weakening draft is refused when it is ratified.
+
+The precedence layers, in order, are Charter, Agent code, Operator (build work only), Department, and Client adjustment.
 
 **This is a scripted demo that represents the process** I run in my own agent framework. It is not a sample or excerpt of that system, and none of its code or data is in it.
 
 - Live page: https://demos.obviouslogic.ai/rule-precedence/
 - Source: https://github.com/obviouslogic-ai/rule-precedence
 
-## Why I built this
+## What this shows
 
-Agent rules come from several places: company policy, a team, one project. Ordinary config merging lets the last file win, so a single project setting can quietly lift a spend cap or switch off review for every run under it. My own framework stacks its rules from a top-level charter down to each task. Lower layers can add rules or make them stricter, never weaker, and every attempt to loosen one is reported. This repo acts that out with three rule types: flags, maximums and allow-lists.
+Agent rules come from those layers. Ordinary merging lets the last file win, so a lower layer can lift a limit or switch review off. Precedence keeps the higher layer. The override is recorded.
 
-## The cost, last write wins versus precedence
+The sample file uses short layer names to exercise that rule. It does not replace the order above.
 
-The page merges the same layers two ways, `naive()` (last write wins) and `effective()` (precedence), and prices the difference with an illustrative model. Every number is an input you can change; none are measured or cited figures.
-
-- Overspend: runs a month x share of runs that spend to the cap x (loosened cap - policy cap).
-- Review switched off: runs x share of unreviewed runs that go wrong x cost of one bad run.
-- Defaults: 100 runs, 10% to the cap, 2% bad, $1,000 a bad run. On `example.json` that is $11,000 a month with last write wins and $0 with precedence.
+The page and the command line run this repo. The last-write-wins path and the precedence path are both here.
 
 ## Run the CLI
 
 ```sh
-python3 precedence.py example.json   # prints the effective rules and the rejected weakenings
+python3 precedence.py example.json
 ```
 
-Standard library only, no installs.
+Standard library only, no installs. The command prints the effective rules and the rejected weakenings.
 
 ## Run the page locally
 
 ```sh
-cd web && ./get-pyodide.sh && cd ..   # once: downloads Pyodide 0.27.7 into web/vendor (gitignored)
-python3 -m http.server 8000   # from the folder that holds this repo
-# open http://localhost:8000/rule-precedence/web/
+cd web && ./get-pyodide.sh && cd ..
+python3 -m http.server
 ```
 
-The page fits one screen. Pick the example as written or one of four proposed changes, then press **Merge the layers**. The table walks rule by rule: each layer's value is tagged tighter, looser or set by `stricter_or_equal()`, then the last-write-wins result and the precedence result sit side by side with differences in red. Rejected weakenings are listed and the cost panel updates. The explanation sits behind **About this demo** in the corner. Add `?fast=1` to skip the pauses.
+Serve from this repo, then open the web page. The page fits the screen. Pick the example as written or a proposed change, then press **Merge the layers**. The table walks each rule. Each layer value is tagged tighter, looser, or set. Last write wins and precedence sit side by side. Rejected weakenings are listed. The explanation sits behind **About this demo**. Add a fast parameter to the page address to skip the pauses.
 
-The page runs this repo's real Python in the browser through Pyodide, so what you click is the same code the tests cover. Styling comes from `web/kit/`, shared across all five demos.
+The page runs this repo's Python in the browser, so a click runs the same code the tests cover. Styling comes from `web/kit/`, shared with the other demos.
 
 ## Tests
 
 ```sh
 python3 -m unittest -v
+python3 lint_copy.py
 ```
 
 ## License

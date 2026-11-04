@@ -18,56 +18,43 @@ td.nv,td.ev{white-space:nowrap;opacity:0;transition:opacity .4s}td.nv.in,td.ev.i
 td.nv.diff{color:var(--bad)}td.ev{color:var(--ok)}
 #sum{font:.68em/1.5 var(--mono);color:var(--dim);margin-top:.6em;min-height:3em}#sum .x{color:var(--bad)}#sum .y{color:var(--ok)}
 .act select{margin-right:0;max-width:100%}
+.order{font:.8em var(--mono);color:var(--fg);line-height:1.5}.order div{padding:.08em 0}
+.order-note{font:.68em/1.45 var(--mono);color:var(--dim);margin:.5em 0 0}
 @media (max-width:760px),(orientation:portrait){
  .work{font-size:calc(1.05em * var(--k,1));grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"layers" "trail" "cost";gap:1.2dvh}
  .layer{padding:.15em 0 .15em calc(var(--depth) * .9em)}.why{font-size:12px}}
 @media (max-height:560px){.why{display:none}.work{grid-template-columns:.8fr 1.4fr 1fr;grid-template-rows:minmax(0,1fr);grid-template-areas:"layers trail cost"}#trc{font-size:.9em}}
 </style></head><body class="stage">
 <main class="stage-main">
-<div><div class="tele" data-kit-tele></div><h1>A lower layer can tighten a rule. It can never loosen one</h1>
-<p class="why"><b>WHY I BUILT THIS.</b> Agent rules come from several places: company policy, a team, one project. Ordinary config merging lets the last file win, so a single project setting can quietly lift a spend cap or switch off review for every run under it. Precedence makes each layer a floor that nothing below it can lower, and every attempt is reported.</p></div>
+<div><div class="tele" data-kit-tele></div><h1>A lower layer can add or tighten a rule and can never weaken one.</h1>
+<p class="why"><b>WHY THIS EXISTS.</b> When a higher layer overrides a lower one, the override is recorded. A weakening draft is refused when it is ratified. The precedence layers, in order, are Charter, Agent code, Operator (build work only), Department, and Client adjustment. Ordinary merging lets the last file win, so a lower layer can lift a limit or switch review off. Precedence keeps the higher layer.</p></div>
 <div class="work" data-fit>
- <div id="layc"><div class="tele">01 / <b>LAYERS</b>, TOP TO BOTTOM</div><div id="layers"></div></div>
- <div id="trc"><div class="tele">02 / <b>MERGE, RULE BY RULE</b> / <span id="phase">IDLE</span></div>
+ <div id="layc"><div class="tele"><b>LAYERS</b>, TOP TO BOTTOM</div><div id="layers"></div></div>
+ <div id="trc"><div class="tele"><b>MERGE, RULE BY RULE</b> / <span id="phase">IDLE</span></div>
   <table><thead><tr><th>Rule</th><th>Each layer's value</th><th>Last write wins</th><th>Precedence</th></tr></thead><tbody id="trail"></tbody></table><div id="sum"></div></div>
- <div id="costc"><div class="tele">03 / <b>THE COST</b> / <span class="illus">ILLUSTRATIVE, EDIT THE NUMBERS</span></div><div id="calc"></div>
-  <div class="cost"><span class="lab">Last write wins</span><span class="bar bad"><i id="bA"></i></span><span class="v" id="vA">-</span><span class="lab">Precedence</span><span class="bar ok"><i id="bB"></i></span><span class="v" id="vB">-</span></div>
-  <div class="math" id="math">Press Merge to compute.</div></div>
+ <div id="costc"><div class="tele"><b>ORDER</b>, HIGHEST FIRST</div>
+  <div class="order"><div>Charter</div><div>Agent code</div><div>Operator (build work only)</div><div>Department</div><div>Client adjustment</div></div>
+  <p class="order-note">When a higher layer overrides a lower one, the override is recorded.</p></div>
 </div>
 <div class="act"><select id="sc" aria-label="Pick a change"></select><button class="big" id="go" disabled>Merge the layers</button><span class="verdict" id="verdict"></span></div>
 </main>
-<template id="info"><p>My agents get their rules from stacked layers: a charter at the top, then a team, then each project. Lower layers may add rules or tighten them. Any attempt to loosen one is rejected and reported, and the stricter value stays.</p><p>This page runs the real <code>precedence.py</code> on the repo's <code>example.json</code> in your browser: <code>merge()</code> for precedence and <code>naive()</code>, plain last-write-wins merging, for contrast. Pick a change to try it on top of the example. The cost panel is an illustrative model: every number is an input you can change, and the gaps it prices come straight from the two merges.</p></template>
+<template id="info"><p>A lower layer can add or tighten a rule and can never weaken one.</p><p>When a higher layer overrides a lower one, the override is recorded.</p><p>A weakening draft is refused when it is ratified. The precedence layers, in order, are Charter, Agent code, Operator (build work only), Department, and Client adjustment. This page runs <code>precedence.py</code> on <code>example.json</code> in the browser. <code>merge()</code> applies precedence. <code>naive()</code> lets the last write win. The sample file uses short layer names to exercise that rule. It does not replace the order above.</p></template>
 <script src="vendor/pyodide.js"></script>
 <script type="module">
-import { mount, setStatus, sleep, autoFit, calc, usd } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
+import { mount, setStatus, sleep, autoFit } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";
 mount("rule-precedence", { status: "LOADING PYTHON" });
 const $ = id => document.getElementById(id);
-const TRY = [["Example layers as written", null], ["Team raises spend cap to 1000", ["team", "max_spend", "max", 1000]],
+const TRY = [["Example layers as written", null], ["Team raises the spend cap", ["team", "max_spend", "max", 1000]],
  ["Project narrows tools to search", ["project", "allowed_tools", "allow", ["search"]]], ["Team adds require_mfa", ["team", "require_mfa", "flag", true]],
  ["Project adds delete to its tools", ["project", "allowed_tools", "allow", ["search", "read", "write", "delete"]]]];
 TRY.forEach(([n], i) => $("sc").add(new Option(n, i)));
-const FIELDS = [{ id: "runs", label: "Agent runs a month", value: 100 }, { id: "cap", label: "% of runs that spend to the cap", value: 10 },
- { id: "bad", label: "% unreviewed runs that go wrong", value: 2, step: .5 }, { id: "fix", label: "Cost of one bad run ($)", value: 1000, step: 100 }];
-let last = null;
-function cost(v) {
-  if (!last) return; const { nv, ev } = last;
-  const spendGap = Math.max(0, (nv.max_spend?.value ?? 0) - (ev.max_spend?.value ?? 0)), reviewOff = ev.require_review?.value && !nv.require_review?.value;
-  const extra = (nv.allowed_tools?.value || []).filter(t => !(ev.allowed_tools?.value || []).includes(t));
-  const spend = v.runs * v.cap / 100 * spendGap, rev = reviewOff ? v.runs * v.bad / 100 * v.fix : 0, A = spend + rev, B = 0, m = Math.max(A, 1);
-  $("bA").style.width = (A / m * 100) + "%"; $("bB").style.width = "0%"; $("vA").textContent = usd(A) + "/mo"; $("vB").textContent = usd(B) + "/mo";
-  $("math").innerHTML = `Overspend: <b>${v.runs}</b> runs x <b>${v.cap}%</b> x <b>${usd(spendGap)}</b> cap gap = <b>${usd(spend)}</b>. ` +
-    (reviewOff ? `Review switched off: <b>${v.runs}</b> x <b>${v.bad}%</b> x <b>${usd(v.fix)}</b> = <b>${usd(rev)}</b>. ` : "Review stays on. ") +
-    (extra.length ? `Extra tools granted: <b>${extra.join(", ")}</b> (not priced). ` : "") + `Precedence: <b>$0</b> above policy, <b>${last.viol.length}</b> attempt(s) reported.`;
-  document.body.dataset.exposure = Math.round(A);
-}
-const read = calc($("calc"), FIELDS, cost);
 const py = await loadPy({ "precedence.py": "../precedence.py" });
 const base = await (await fetch("../example.json")).json();
 py.runPython("import json, precedence");
 const P = (fn, arg) => JSON.parse(py.runPython(`json.dumps(precedence.${fn}(*json.loads(${JSON.stringify(JSON.stringify(arg))})))`));
 const fmt = v => Array.isArray(v) ? "[" + v.join(",") + "]" : String(v);
 function drawLayers(layers, prop, focus) {
-  $("layers").innerHTML = layers.map((l, i) => `<div class="layer${focus === l.name ? " focus" : ""}" style="--depth:${i}"><div class="h">${String(i + 1).padStart(2, "0")} ${l.name}${i === 0 ? " (charter)" : ""}</div><div class="rules">${Object.entries(l.rules).map(([n, r]) =>
+  $("layers").innerHTML = layers.map((l, i) => `<div class="layer${focus === l.name ? " focus" : ""}" style="--depth:${i}"><div class="h">${l.name}</div><div class="rules">${Object.entries(l.rules).map(([n, r]) =>
     `<span class="rule${prop && prop[0] === l.name && prop[1] === n ? " prop" : ""}">${n}=${fmt(r.value)}</span>`).join("")}</div></div>`).join("");
 }
 let busy = false;
@@ -94,11 +81,9 @@ async function run() {
   const nv = P("naive", [layers]), [ev, viol] = P("merge", [layers]);
   for (const n of names) { const row = $("trail").querySelector(`[data-n="${n}"]`), a = row.querySelector(".nv"), b = row.querySelector(".ev");
     a.textContent = fmt(nv[n].value); b.textContent = fmt(ev[n].value); a.classList.toggle("diff", fmt(nv[n].value) !== fmt(ev[n].value)); a.classList.add("in"); await sleep(250); b.classList.add("in"); await sleep(250); }
-  last = { nv, ev, viol }; cost(read());
-  const diffs = names.filter(n => fmt(nv[n].value) !== fmt(ev[n].value));
-  $("sum").innerHTML = viol.length ? viol.map(v => `<span class="x">REJECTED ${v}</span>`).join("<br>") + `<br><span class="y">${diffs.length} rule(s) would have been loosened silently by last write wins.</span>` : `<span class="y">Nothing loosened. Both merges agree.</span>`;
+  $("sum").innerHTML = viol.length ? viol.map(v => `<span class="x">REJECTED ${v}</span>`).join("<br>") + `<br><span class="y">Last write wins would leave a looser result.</span>` : `<span class="y">Nothing loosened. Both merges agree.</span>`;
   const bad = t ? viol.some(v => v.startsWith(t[0] + ": " + t[1] + " ")) : viol.length > 0;
-  $("verdict").textContent = t ? (bad ? `Rejected: ${t[0]} cannot loosen ${t[1]}` : `Applied: ${t[0]} ${t[1]} = ${fmt(t[3])}`) : `${viol.length} loosening attempts blocked`;
+  $("verdict").textContent = t ? (bad ? `Rejected: ${t[0]} cannot loosen ${t[1]}` : `Applied: ${t[0]} ${t[1]}`) : (bad ? "Loosening blocked" : "Nothing loosened");
   $("verdict").className = "verdict " + (bad ? "badc" : "okc"); document.body.dataset.verdict = bad ? "rejected" : "applied";
   setStatus("DONE"); $("phase").textContent = "DONE"; $("go").textContent = "Merge again"; $("go").disabled = $("sc").disabled = false; busy = false; document.body.dataset.done = "1";
 }
