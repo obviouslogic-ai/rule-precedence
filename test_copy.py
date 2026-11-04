@@ -27,6 +27,21 @@ class CopyLintTest(unittest.TestCase):
         sample = _phrase("Any ", "attempt to loosen one is ", "reported.")
         self.assertTrue(lint_copy.check_claims(sample))
 
+    def test_guard_rejects_each_spelled_number(self):
+        for word in lint_copy.SPELLED_NUMBERS:
+            with self.subTest(word=word):
+                self.assertTrue(lint_copy.check_spelled_numbers("Count " + word + " items."))
+
+    def test_guard_rejects_every_single_attempt(self):
+        sample = _phrase("Every ", "single ", "attempt gets a line.")
+        self.assertTrue(lint_copy.check_claims(sample))
+
+    def test_guard_rejects_write_once(self):
+        self.assertTrue(lint_copy.check_claims(_phrase("write", "-once")))
+
+    def test_guard_rejects_cannot_be_altered(self):
+        self.assertTrue(lint_copy.check_claims(_phrase("cannot ", "be ", "altered")))
+
     def test_guard_rejects_integrity_claims(self):
         for sample in (
             _phrase("hash", "-chain"),
@@ -45,13 +60,33 @@ class CopyLintTest(unittest.TestCase):
         self.assertTrue(lint_copy.check_names(sample))
         self.assertTrue(lint_copy.check_names("Written by " + "Dan" + "."))
 
+    def test_guard_rejects_single_and_lowercase_names(self):
+        self.assertTrue(lint_copy.check_names("see " + "dan"))
+        self.assertTrue(lint_copy.check_names("see " + "dezago"))
+        self.assertTrue(lint_copy.check_names("dan" + " " + "dezago"))
+
+    def test_layer_and_role_words_are_not_names(self):
+        sample = " ".join(lint_copy.LAYERS) + " operator department charter agent client"
+        self.assertEqual(lint_copy.check_names(sample), [])
+
     def test_layers_must_stay_in_order(self):
-        good = (
-            "Charter, Agent code, Operator, Department, and Client adjustment. "
-            + lint_copy.SENTENCE
+        good = " ".join(
+            (
+                lint_copy.LEAD,
+                lint_copy.SENTENCE,
+                lint_copy.RATIFY,
+                "Charter, Agent code, Operator (build work only), Department, and Client adjustment.",
+            )
         )
         self.assertEqual(lint_copy.require_story(good), [])
-        bad = "Client adjustment, then Charter, Agent code, Operator, Department. " + lint_copy.SENTENCE
+        bad = " ".join(
+            (
+                lint_copy.LEAD,
+                lint_copy.SENTENCE,
+                lint_copy.RATIFY,
+                "Client adjustment, then Charter, Agent code, Operator (build work only), Department.",
+            )
+        )
         self.assertTrue(lint_copy.require_story(bad))
 
 

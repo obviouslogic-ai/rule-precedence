@@ -26,19 +26,19 @@ td.nv.diff{color:var(--bad)}td.ev{color:var(--ok)}
 @media (max-height:560px){.why{display:none}.work{grid-template-columns:.8fr 1.4fr 1fr;grid-template-rows:minmax(0,1fr);grid-template-areas:"layers trail cost"}#trc{font-size:.9em}}
 </style></head><body class="stage">
 <main class="stage-main">
-<div><div class="tele" data-kit-tele></div><h1>When a higher layer overrides a lower one, the override is recorded.</h1>
-<p class="why"><b>WHY THIS EXISTS.</b> The precedence layers, in order, are Charter, Agent code, Operator, Department, and Client adjustment. Ordinary merging lets the last file win, so a lower layer can lift a limit or switch review off. Precedence keeps the higher layer. The override is recorded.</p></div>
+<div><div class="tele" data-kit-tele></div><h1>A lower layer can add or tighten a rule and can never weaken one.</h1>
+<p class="why"><b>WHY THIS EXISTS.</b> When a higher layer overrides a lower one, the override is recorded. A weakening draft is refused when it is ratified. The precedence layers, in order, are Charter, Agent code, Operator (build work only), Department, and Client adjustment. Ordinary merging lets the last file win, so a lower layer can lift a limit or switch review off. Precedence keeps the higher layer.</p></div>
 <div class="work" data-fit>
  <div id="layc"><div class="tele"><b>LAYERS</b>, TOP TO BOTTOM</div><div id="layers"></div></div>
  <div id="trc"><div class="tele"><b>MERGE, RULE BY RULE</b> / <span id="phase">IDLE</span></div>
   <table><thead><tr><th>Rule</th><th>Each layer's value</th><th>Last write wins</th><th>Precedence</th></tr></thead><tbody id="trail"></tbody></table><div id="sum"></div></div>
  <div id="costc"><div class="tele"><b>ORDER</b>, HIGHEST FIRST</div>
-  <div class="order"><div>Charter</div><div>Agent code</div><div>Operator</div><div>Department</div><div>Client adjustment</div></div>
+  <div class="order"><div>Charter</div><div>Agent code</div><div>Operator (build work only)</div><div>Department</div><div>Client adjustment</div></div>
   <p class="order-note">When a higher layer overrides a lower one, the override is recorded.</p></div>
 </div>
 <div class="act"><select id="sc" aria-label="Pick a change"></select><button class="big" id="go" disabled>Merge the layers</button><span class="verdict" id="verdict"></span></div>
 </main>
-<template id="info"><p>The precedence layers, in order, are Charter, Agent code, Operator, Department, and Client adjustment. When a higher layer overrides a lower one, the override is recorded.</p><p>This page runs <code>precedence.py</code> on <code>example.json</code> in the browser. <code>merge()</code> applies precedence. <code>naive()</code> lets the last write win. The sample file uses short layer names to exercise that rule. It does not replace the order above.</p></template>
+<template id="info"><p>A lower layer can add or tighten a rule and can never weaken one.</p><p>When a higher layer overrides a lower one, the override is recorded.</p><p>A weakening draft is refused when it is ratified. The precedence layers, in order, are Charter, Agent code, Operator (build work only), Department, and Client adjustment. This page runs <code>precedence.py</code> on <code>example.json</code> in the browser. <code>merge()</code> applies precedence. <code>naive()</code> lets the last write win. The sample file uses short layer names to exercise that rule. It does not replace the order above.</p></template>
 <script src="vendor/pyodide.js"></script>
 <script type="module">
 import { mount, setStatus, sleep, autoFit } from "./kit/kit.js"; import { loadPy } from "./kit/py.js";

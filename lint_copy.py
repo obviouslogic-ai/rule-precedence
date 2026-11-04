@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Fail if user-facing copy leaves the verified rule-precedence wording.
 
-Scans the README, the page, the shared demo note, and the license for
-claims this demo must not make. Prose is also checked for digits. The
-rule engine, fixtures, and tests are out of scope: their numbers are
-behavior, not copy.
+Scans the README, the page, and the shared demo kit. Prose is checked for
+digits and for numbers spelled as words. The license is checked for forbidden
+claims only: the copyright line keeps its legal name, and this script does
+not edit or name-check legal text. The rule engine, fixtures, and tests are
+out of scope.
 """
 import re
 import sys
@@ -15,35 +16,75 @@ ROOT = Path(__file__).resolve().parent
 LAYERS = (
     "Charter",
     "Agent code",
-    "Operator",
+    "Operator (build work only)",
     "Department",
     "Client adjustment",
 )
+LEAD = "A lower layer can add or tighten a rule and can never weaken one."
 SENTENCE = "When a higher layer overrides a lower one, the override is recorded."
+RATIFY = "A weakening draft is refused when it is ratified."
 
-# Phrases are built here so the banned wording is not stored as a single literal.
+SPELLED_NUMBERS = (
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen",
+    "twenty",
+    "hundred",
+    "thousand",
+)
+
+
 def _claim_patterns():
     return (
         re.compile("every" + r"\s+" + "attempt", re.I),
+        re.compile("every" + r"\s+" + "single" + r"\s+" + "attempt", re.I),
         re.compile("any" + r"\s+" + "attempt", re.I),
         re.compile(r"\b" + "reported" + r"\b", re.I),
         re.compile("hash" + r"[-\s]?" + "chain", re.I),
         re.compile("tamper" + r"[-\s]?" + "proof", re.I),
         re.compile("tamper" + r"[-\s]?" + "evident", re.I),
         re.compile("immutab", re.I),
+        re.compile("write" + r"[-\s]" + "once", re.I),
+        re.compile("cannot" + r"\s+be\s+" + "altered", re.I),
         re.compile(r"\$\s*\d"),
         re.compile(r"\b" + "savings" + r"\b", re.I),
         re.compile(r"\b" + "overspend" + r"\b", re.I),
     )
 
 
-def _name_patterns():
-    given = "Dan"
-    family = "De" + "Zago"
+def _person_names():
+    return ("dan", "de" + "zago")
+
+
+def _layer_and_role_phrases():
     return (
-        re.compile(r"\b" + given + r"\b"),
-        re.compile(r"\b" + family + r"\b", re.I),
-        re.compile(r"\b[A-Z][a-z]+ [A-Z][a-zA-Z]+\b"),
+        "Operator (build work only)",
+        "Agent code",
+        "Client adjustment",
+        "Charter",
+        "Operator",
+        "Department",
+        "agent",
+        "operator",
+        "department",
+        "charter",
+        "client",
     )
 
 
@@ -57,9 +98,16 @@ def check_claims(text):
 
 
 def check_names(text):
+    """Match a person-name list, including a single name and any letter case.
+
+    Layer and role words are removed first so they cannot match a name token.
+    """
+    held = text
+    for phrase in _layer_and_role_phrases():
+        held = re.sub(re.escape(phrase), " ", held, flags=re.I)
     errors = []
-    for pattern in _name_patterns():
-        match = pattern.search(text)
+    for name in _person_names():
+        match = re.search(r"\b" + re.escape(name) + r"\b", held, re.I)
         if match:
             errors.append(f"real-person name: {match.group(0)}")
     return errors
@@ -72,10 +120,33 @@ def check_digits(text):
     return []
 
 
+def check_spelled_numbers(text):
+    errors = []
+    for word in SPELLED_NUMBERS:
+        match = re.search(r"\b" + word + r"\b", text, re.I)
+        if match:
+            errors.append(f"spelled number: {match.group(0)}")
+    return errors
+
+
+def without_canon(text):
+    for line in (LEAD, SENTENCE):
+        text = text.replace(line, " ")
+    return text
+
+
 def require_story(text):
     errors = []
-    if SENTENCE not in text:
+    lead_at = text.find(LEAD)
+    sent_at = text.find(SENTENCE)
+    if lead_at < 0:
+        errors.append("missing the lead line")
+    if sent_at < 0:
         errors.append("missing the override sentence")
+    if lead_at >= 0 and sent_at >= 0 and lead_at > sent_at:
+        errors.append("override sentence must follow the lead line")
+    if RATIFY not in text:
+        errors.append("missing the ratification line")
     indexes = []
     for layer in LAYERS:
         found = text.find(layer)
@@ -102,36 +173,44 @@ def html_parts(text):
     return prose, scripts + "\n" + styles
 
 
+def _scan(label, text, *, digits=False, spelled=False, names=True):
+    errors = []
+    for error in check_claims(text):
+        errors.append(f"{label}: {error}")
+    if names:
+        for error in check_names(text):
+            errors.append(f"{label}: {error}")
+    if digits:
+        for error in check_digits(text):
+            errors.append(f"{label}: {error}")
+    if spelled:
+        for error in check_spelled_numbers(without_canon(text)):
+            errors.append(f"{label}: {error}")
+    return errors
+
+
 def check_repo():
     errors = []
     readme = (ROOT / "README.md").read_text()
     prose = markdown_prose(readme)
     fences = "\n".join(re.findall(r"```.*?```", readme, flags=re.S))
-    for label, text, digits in (
-        ("README prose", prose, True),
-        ("README code", fences, False),
-    ):
-        for error in check_claims(text) + check_names(text) + (check_digits(text) if digits else []):
-            errors.append(f"{label}: {error}")
+    errors.extend(_scan("README prose", prose, digits=True, spelled=True))
+    errors.extend(_scan("README code", fences, digits=False, spelled=False))
     for error in require_story(prose):
         errors.append(f"README prose: {error}")
 
     page = (ROOT / "web" / "index.html").read_text()
     page_prose, page_code = html_parts(page)
-    for error in check_claims(page_prose) + check_names(page_prose) + check_digits(page_prose):
-        errors.append(f"page prose: {error}")
-    for error in check_claims(page_code) + check_names(page_code):
-        errors.append(f"page code: {error}")
+    errors.extend(_scan("page prose", page_prose, digits=True, spelled=True))
+    errors.extend(_scan("page code", page_code, digits=False, spelled=False))
     for error in require_story(page_prose):
         errors.append(f"page prose: {error}")
 
     kit = (ROOT / "web" / "kit" / "kit.js").read_text()
-    for error in check_claims(kit) + check_names(kit):
-        errors.append(f"kit: {error}")
+    errors.extend(_scan("kit", kit, digits=False, spelled=False))
 
     license_text = (ROOT / "LICENSE").read_text()
-    for error in check_claims(license_text) + check_names(license_text):
-        errors.append(f"LICENSE: {error}")
+    errors.extend(_scan("LICENSE", license_text, digits=False, spelled=False, names=False))
     return errors
 
 
