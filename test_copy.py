@@ -65,8 +65,19 @@ class CopyLintTest(unittest.TestCase):
         self.assertTrue(lint_copy.check_names("see " + "dezago"))
         self.assertTrue(lint_copy.check_names("dan" + " " + "dezago"))
 
+    def test_guard_rejects_two_capitalized_words(self):
+        self.assertTrue(lint_copy.check_names("Built by Jane Smith."))
+
+    def test_guard_rejects_well_known_single_name(self):
+        self.assertTrue(lint_copy.check_names("Plato wrote this."))
+
+    def test_guard_rejects_lowercase_first_name(self):
+        self.assertTrue(lint_copy.check_names("Built by alice."))
+
     def test_layer_and_role_words_are_not_names(self):
-        sample = " ".join(lint_copy.LAYERS) + " operator department charter agent client"
+        titles = "Approval gate. Rule precedence. Skill lint. Agent activity. Assembly."
+        roles = "operator department charter agent client"
+        sample = " ".join(lint_copy.LAYERS) + " " + roles + " " + titles
         self.assertEqual(lint_copy.check_names(sample), [])
 
     def test_layers_must_stay_in_order(self):

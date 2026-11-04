@@ -68,15 +68,56 @@ def _claim_patterns():
     )
 
 
-def _person_names():
+def _fixed_names():
     return ("dan", "de" + "zago")
 
 
-def _layer_and_role_phrases():
+def _given_and_known_names():
+    """First names, plus well-known single names. Matched as whole words, any case."""
+    return (
+        "alice", "jane", "mary", "anna", "emma", "olivia", "sophia", "mia", "elena",
+        "sofia", "victoria", "grace", "chloe", "lily", "hannah", "nora", "ruby",
+        "claire", "lucy", "stella", "violet", "aurora", "savannah", "brooklyn",
+        "leah", "zoey", "penelope", "layla", "riley", "eleanor", "hazel",
+        "ellie", "paisley", "skylar", "natalie", "addison", "luna", "aubrey",
+        "john", "james", "robert", "michael", "david", "william", "joseph",
+        "thomas", "charles", "christopher", "daniel", "matthew", "anthony",
+        "donald", "steven", "paul", "andrew", "joshua", "kenneth", "kevin",
+        "brian", "george", "edward", "ronald", "timothy", "jason", "jeffrey",
+        "jacob", "gary", "nicholas", "eric", "jonathan", "stephen", "larry",
+        "justin", "scott", "brandon", "benjamin", "samuel", "raymond", "gregory",
+        "alexander", "patrick", "jack", "dennis", "jerry", "tyler", "aaron",
+        "jose", "adam", "nathan", "zachary", "harold", "carl", "arthur", "gerald",
+        "roger", "keith", "jeremy", "terry", "lawrence", "sean", "christian",
+        "austin", "jesse", "dylan", "bruce", "bryan", "eugene", "russell",
+        "bobby", "howard", "carlos", "philip", "wayne", "ralph", "louis",
+        "peter", "frank", "joe", "bob", "bill", "tom", "tim", "sam",
+        "ben", "alex", "ryan", "noah", "liam", "ethan", "logan", "mason",
+        "lucas", "henry", "owen", "luke", "wyatt", "gabriel", "julian", "isaac",
+        "leo", "lincoln", "jaxon", "asher", "plato", "socrates",
+        "aristotle", "homer", "confucius", "euclid", "voltaire",
+    )
+
+
+def _allowed_phrases():
+    """Layer, role, demo-title, and product words. Longest phrases first."""
     return (
         "Operator (build work only)",
-        "Agent code",
         "Client adjustment",
+        "Agent code",
+        "Approval gate",
+        "Rule precedence",
+        "Skill lint",
+        "Agent activity",
+        "JetBrains Mono",
+        "ObviousLogic",
+        "Pyodide",
+        "Python",
+        "GitHub",
+        "Barlow",
+        "JetBrains",
+        "Inter",
+        "Assembly",
         "Charter",
         "Operator",
         "Department",
@@ -85,6 +126,7 @@ def _layer_and_role_phrases():
         "department",
         "charter",
         "client",
+        "assembly",
     )
 
 
@@ -97,16 +139,41 @@ def check_claims(text):
     return errors
 
 
-def check_names(text):
-    """Match a person-name list, including a single name and any letter case.
-
-    Layer and role words are removed first so they cannot match a name token.
-    """
+def _strip_allowed(text):
     held = text
-    for phrase in _layer_and_role_phrases():
-        held = re.sub(re.escape(phrase), " ", held, flags=re.I)
+    for phrase in _allowed_phrases():
+        if " " in phrase or "(" in phrase:
+            held = re.sub(re.escape(phrase), " ", held, flags=re.I)
+        else:
+            held = re.sub(r"\b" + re.escape(phrase) + r"\b", " ", held, flags=re.I)
+    return held
+
+
+def _two_capitalized_words(text):
+    """Two title-case words. An all-caps second word is a label, not a name."""
+    found = []
+    for match in re.finditer(r"\b[A-Z][a-z]+ [A-Z][a-zA-Z]+\b", text):
+        second = match.group(0).split()[1]
+        if second.isupper():
+            continue
+        found.append(match.group(0))
+    return found
+
+
+def check_names(text):
+    """Fixed names, two capitalized words, and the given-name list.
+
+    All three run only after layer, role, demo-title, and product words are gone.
+    """
+    held = _strip_allowed(text)
     errors = []
-    for name in _person_names():
+    for name in _fixed_names():
+        match = re.search(r"\b" + re.escape(name) + r"\b", held, re.I)
+        if match:
+            errors.append(f"real-person name: {match.group(0)}")
+    for hit in _two_capitalized_words(held):
+        errors.append(f"real-person name: {hit}")
+    for name in _given_and_known_names():
         match = re.search(r"\b" + re.escape(name) + r"\b", held, re.I)
         if match:
             errors.append(f"real-person name: {match.group(0)}")
